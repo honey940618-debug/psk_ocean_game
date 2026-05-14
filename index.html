@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSK 2026 海洋靈魂鑑定局</title>
+    <style>
+        :root { --psk-blue: #003366; --psk-cyan: #00acc1; --psk-gold: #ffc107; --psk-deep: #001a33; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: var(--psk-deep); color: #333; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; }
+        .container { width: 85%; max-width: 420px; background: rgba(255, 255, 255, 0.97); border-radius: 35px; padding: 30px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); max-height: 85vh; overflow-y: auto; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.3); box-sizing: border-box; text-align: center; }
+        .page { display: none; }
+        .active { display: block; animation: pageIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes pageIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .start-btn { width: 130px; height: 130px; background: white; border: 5px solid var(--psk-cyan); border-radius: 50%; margin: 40px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,172,193,0.7); } 70% { box-shadow: 0 0 0 20px rgba(0,172,193,0); } 100% { box-shadow: 0 0 0 0 rgba(0,172,193,0); } }
+        .opt-btn { display: block; width: 100%; padding: 18px; margin-bottom: 12px; border: 2px solid #eee; border-radius: 20px; background: white; text-align: left; font-size: 15px; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
+        .opt-btn:hover { border-color: var(--psk-cyan); background: #f0faff; transform: translateY(-3px); }
+        .role-emoji { font-size: 65px; margin-bottom: 10px; display: inline-block; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .role-name { font-size: 26px; font-weight: 900; color: var(--psk-blue); margin-bottom: 10px; }
+        .role-desc { font-size: 14px; line-height: 1.6; color: #555; background: rgba(0, 172, 193, 0.05); padding: 15px; border-radius: 20px; border-left: 5px solid var(--psk-cyan); text-align: left; margin-bottom: 20px; }
+        .product-card { border-radius: 25px; padding: 15px; background: #fff; border: 1px solid #eee; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: var(--psk-cyan); }
+        .product-img { width: 100%; height: 160px; object-fit: contain; }
+        .btn-main { width: 100%; padding: 18px; border: none; border-radius: 20px; font-size: 18px; font-weight: bold; cursor: pointer; background: var(--psk-blue); color: white; margin-top: 15px; }
+        #loading { display: none; text-align: center; padding: 40px 0; }
+        .loader { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--psk-cyan); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div id="app">
+        <div class="container">
+            <div id="p-start" class="page active">
+                <div style="font-size:12px; color:#999; letter-spacing:2px;">PSK DEEP SEA SOURCE</div>
+                <h1 style="color:var(--psk-blue); margin:15px 0;">海洋靈魂鑑定局</h1>
+                <p style="color:#666; font-size: 14px;">在 7/1 沙崙行動展開前<br>探尋你的深海原型與命定修護</p>
+                <div class="start-btn" onclick="goPage('p-quiz')">
+                    <div style="font-weight:900; font-size:20px; color:var(--psk-blue);">鑑定開始</div>
+                </div>
+                <div style="font-size: 12px; color: var(--psk-cyan); font-weight: bold;">🌊 淡水沙崙海灘 ‧ 限量席位</div>
+            </div>
+            <div id="p-quiz" class="page">
+                <div id="q-container"></div>
+            </div>
+            <div id="loading">
+                <div class="loader"></div>
+                <p style="color: var(--psk-blue); font-weight: bold;">深海靈魂鑑定中...</p>
+            </div>
+            <div id="p-role" class="page">
+                <div id="r-emoji" class="role-emoji"></div>
+                <div id="r-name" class="role-name"></div>
+                <div id="r-desc" class="role-desc"></div>
+                <div class="product-card" id="p-link">
+                    <div style="background:var(--psk-gold); color:#333; font-size:11px; padding:3px 10px; border-radius:8px; display:inline-block; font-weight:bold; margin-bottom:10px;">命定修護配方 (點擊查看詳情)</div>
+                    <h3 id="p-name" style="margin:5px 0; color:var(--psk-blue); font-size:16px;"></h3>
+                    <img id="p-img" src="" class="product-img">
+                    <p id="p-desc" style="font-size:12px; color:#777;"></p>
+                </div>
+                <button class="btn-main" onclick="goPage('p-event')">領取行動指南 →</button>
+            </div>
+            <div id="p-event" class="page">
+                <h3 style="color:var(--psk-blue);">🌊 2026 海洋修護行動</h3>
+                <div style="background:var(--psk-blue); color:white; padding:20px; border-radius:25px; text-align:left; font-size:14px;">
+                    <div style="font-weight:bold; color:var(--psk-gold); font-size:18px; text-align:center; margin-bottom:10px;">淨灘抽大獎 ‧ 現場招募</div>
+                    <p>📅 <b>日期：</b> 2026 / 07 / 01</p>
+                    <p>📍 <b>地點：</b> 淡水沙崙海灘</p>
+                    <p>🕒 <b>時間：</b> 15:30 - 18:00</p>
+                    <p>🎁 <b>禮遇：</b> 憑此畫面領取 PSK 試用包</p>
+                </div>
+                <button class="btn-main" style="background:var(--psk-gold); color:#333;" onclick="window.open('https://www.psk.com.tw/', '_blank')">立即報名參與 (免費)</button>
+                <button class="btn-main" style="background:none; color:var(--psk-blue); border:1px solid var(--psk-blue);" onclick="location.reload()">重新測驗</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let bubbles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        class Bubble {
+            constructor() { this.x = Math.random() * canvas.width; this.y = canvas.height + 100; this.size = Math.random() * 3 + 1; this.speed = Math.random() * 0.8 + 0.3; this.opacity = Math.random() * 0.3; }
+            update() { this.y -= this.speed; if (this.y < -10) this.y = canvas.height + 10; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.fill(); }
+        }
+        for (let i = 0; i < 40; i++) bubbles.push(new Bubble());
+        function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); bubbles.forEach(b => { b.update(); b.draw(); }); requestAnimationFrame(animate); }
+        animate();
+
+        const questions = [
+            { q: "深夜獨自在海邊，你會想聽哪種聲音來放鬆？", o: [{t:"穩定規律的潮汐聲", s:"A"}, {t:"遠方海鷗的輕快鳴叫", s:"C"}, {t:"純粹的靜謐，與內心對話", s:"B"}] },
+            { q: "若你擁有變身超能力，你最想擁有的盾牌是？", o: [{t:"隱形屏障，隔絕傷害", s:"B"}, {t:"再生細胞，修復疲憊", s:"A"}, {t:"閃耀鱗片，引領方向", s:"C"}] },
+            { q: "關於守護海洋，你認為最關鍵的微小行動是？", o: [{t:"確實分類拾獲的海廢", s:"A"}, {t:"支持海洋友善成分", s:"E"}, {t:"溫柔傳遞環保故事", s:"B"}] },
+            { q: "在朋友圈中，你通常扮演什麼樣的角色？", o: [{t:"深沉穩定的冰川", s:"A"}, {t:"暖心包容的淺灘", s:"B"}, {t:"活力四射的浪花", s:"C"}] },
+            { q: "想像在淨灘現場，你最在意的細節會是？", o: [{t:"防曬配方是否傷珊瑚", s:"E"}, {t:"最後秤重的數據貢獻", s:"A"}, {t:"大家聚在一起的感染力", s:"D"}] },
+            { q: "你對「美麗」的最終定義是？", o: [{t:"內外兼具的緊緻韌性", s:"D"}, {t:"簡單純粹不留負擔", s:"E"}, {t:"隨時隨地散發自信", s:"C"}] },
+            { q: "來到沙崙海灘，你最想留下什麼樣的足跡？", o: [{t:"深度的大自然對話", s:"B"}, {t:"陽光自信的照片", s:"C"}, {t:"守護海洋的具體行動", s:"E"}] }
+        ];
+
+        const roles = {
+            A: { name: "大王烏賊：數據導師", emoji:"🦑", desc: "你擁有精準的邏輯。在沙崙海灘，你是海廢數據的關鍵掌控者。", pName: "PSK 淨顏控油系列", pImg: "https://shoplineimg.com/5f48ae97b07a9c001064c42e/622ab733113c46672e842b06/800x.webp", url: "https://www.psk.com.tw/categories/%E6%8E%A7%E6%B2%B9%EF%BD%9C%E6%B7%A8%E9%A1%8F%E6%8E%A7%E6%B2%B9%E7%B3%BB%E5%88%97" },
+            B: { name: "純淨海龜：修護守護者", emoji:"🐢", desc: "溫柔且堅韌，相信細水長流的力量。你是淨灘中最重要的守護者。", pName: "PSK 深海源萃保濕系列", pImg: "https://shoplineimg.com/5f48ae97b07a9c001064c42e/622eae7f7476667e859611d5/800x.webp", url: "https://www.psk.com.tw/categories/%E4%BF%9D%E6%BF%95%EF%BD%9C%E6%B7%B1%E6%B5%B7%E6%BA%90%E8%90%83%E7%B3%BB%E5%88%97" },
+            C: { name: "飛魚：社群引力員", emoji:"🐟", desc: "天生自帶光芒！你能帶動全場氣氛，讓美麗被看見。", pName: "PSK 珍珠CC膏", pImg: "https://shoplineimg.com/5f48ae97b07a9c001064c42e/63d9ddc6fef15b774c6052d4/800x.webp", url: "https://www.psk.com.tw/categories/pearl-cream" },
+            D: { name: "座頭鯨：行動傳唱者", emoji:"🐋", desc: "具備宏大視野與使命感。你的行動能激發共鳴，引領永續美麗。", pName: "PSK 凝時駐顏眼霜", pImg: "https://shoplineimg.com/5f48ae97b07a9c001064c42e/623044d44b036e001ac9c302/800x.webp", url: "https://www.psk.com.tw/categories/%E6%8A%97%E8%80%81%EF%BD%9C%E5%87%9D%E6%99%82%E9%A7%80%E9%A1%8F%E7%B3%BB%E5%88%97" },
+            E: { name: "珊瑚礁：生態建築師", emoji:"🪸", desc: "重視共生與平衡。你對海洋友善的堅持是地球最需要的養分。", pName: "PSK 物理性防曬系列", pImg: "https://shoplineimg.com/5f48ae97b07a9c001064c42e/6971a501d2aee5b5391af216/800x.webp", url: "https://www.psk.com.tw/categories/%E9%98%B2%E6%9B%AC%EF%BD%9C%E7%89%A9%E7%90%86%E6%80%A7%E5%BD%A9%E5%A6%9D" }
+        };
+
+        let curQ = 0, scores = { A:0, B:0, C:0, D:0, E:0 };
+        function goPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'p-quiz') renderQ(); }
+        function renderQ() {
+            const q = questions[curQ];
+            document.getElementById('q-container').innerHTML = `
+                <div style="font-size:12px; color:var(--psk-cyan); margin-bottom:15px; font-weight:bold;">鑑定進度 ${curQ+1}/7</div>
+                <div style="font-size:18px; font-weight:bold; color:var(--psk-blue); margin-bottom:20px;">${q.q}</div>
+                ${q.o.map(opt => `<button class="opt-btn" onclick="next('${opt.s}')">${opt.t}</button>`).join('')}
+            `;
+        }
+        function next(s) { scores[s]++; curQ++; if(curQ < questions.length) renderQ(); else showLoading(); }
+        function showLoading() { document.getElementById('p-quiz').classList.remove('active'); document.getElementById('loading').style.display = 'block'; setTimeout(renderRole, 1500); }
+        function renderRole() {
+            const top = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            const data = roles[top];
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('r-emoji').innerText = data.emoji;
+            document.getElementById('r-name').innerText = data.name;
+            document.getElementById('r-desc').innerText = data.desc;
+            document.getElementById('p-name').innerText = data.pName;
+            document.getElementById('p-img').src = data.pImg;
+            document.getElementById('p-link').onclick = () => window.open(data.url, '_blank');
+            goPage('p-role');
+        }
+    </script>
+</body>
+</html>
